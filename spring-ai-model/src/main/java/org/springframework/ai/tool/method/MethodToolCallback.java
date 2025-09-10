@@ -115,6 +115,15 @@ public final class MethodToolCallback implements ToolCallback {
 		return this.toolCallResultConverter.convert(result, returnType);
 	}
 
+	public Method getToolMethod() {
+		return this.toolMethod;
+	}
+
+	@Nullable
+	public Object getToolObject() {
+		return this.toolObject;
+	}
+
 	private void validateToolContextSupport(@Nullable ToolContext toolContext) {
 		var isNonEmptyToolContextProvided = toolContext != null && !CollectionUtils.isEmpty(toolContext.getContext());
 		var isToolContextAcceptedByMethod = Stream.of(this.toolMethod.getParameterTypes())

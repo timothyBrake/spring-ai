@@ -113,6 +113,24 @@ class DefaultToolCallingManagerTests {
 	}
 
 	@Test
+	void whenToolCallbackMatchesCustomFilterThenResolve() {
+		ToolCallback toolCallbackA = new TestToolCallback("toolA");
+		ToolCallback toolCallbackB = new TestToolCallback("toolB");
+		ToolCallbackResolver toolCallbackResolver = new StaticToolCallbackResolver(
+				List.of(toolCallbackA, toolCallbackB));
+		ToolCallbackFilter toolCallbackFilter = value -> value.getToolDefinition().name().equals("toolA");
+		ToolCallingManager toolCallingManager = DefaultToolCallingManager.builder()
+			.toolCallbackResolver(toolCallbackResolver)
+			.toolCallbackFilter(toolCallbackFilter)
+			.build();
+
+		List<ToolDefinition> toolDefinitions = toolCallingManager.resolveToolDefinitions(
+				ToolCallingChatOptions.builder().toolCallbacks(toolCallbackA, toolCallbackB).build());
+
+		assertThat(toolDefinitions).containsExactly(toolCallbackA.getToolDefinition());
+	}
+
+	@Test
 	void whenToolCallbackDoesNotExistThenThrow() {
 		ToolCallbackResolver toolCallbackResolver = new StaticToolCallbackResolver(List.of());
 		ToolCallingManager toolCallingManager = DefaultToolCallingManager.builder()

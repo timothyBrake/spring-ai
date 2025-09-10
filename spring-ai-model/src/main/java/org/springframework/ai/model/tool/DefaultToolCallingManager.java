@@ -72,6 +72,8 @@ public final class DefaultToolCallingManager implements ToolCallingManager {
 	private static final ToolExecutionExceptionProcessor DEFAULT_TOOL_EXECUTION_EXCEPTION_PROCESSOR
 			= DefaultToolExecutionExceptionProcessor.builder().build();
 
+	private static final DefaultToolCallbackFilter DEFAULT_TOOL_CALL_FILTER = new DefaultToolCallbackFilter();
+
 	// @formatter:on
 
 	private final ObservationRegistry observationRegistry;
@@ -82,15 +84,19 @@ public final class DefaultToolCallingManager implements ToolCallingManager {
 
 	private ToolCallingObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
+	private ToolCallbackFilter toolCallbackFilter;
+
 	public DefaultToolCallingManager(ObservationRegistry observationRegistry, ToolCallbackResolver toolCallbackResolver,
-			ToolExecutionExceptionProcessor toolExecutionExceptionProcessor) {
+			ToolExecutionExceptionProcessor toolExecutionExceptionProcessor, ToolCallbackFilter toolCallbackFilter) {
 		Assert.notNull(observationRegistry, "observationRegistry cannot be null");
 		Assert.notNull(toolCallbackResolver, "toolCallbackResolver cannot be null");
 		Assert.notNull(toolExecutionExceptionProcessor, "toolCallExceptionConverter cannot be null");
+		Assert.notNull(toolCallbackFilter, "toolCallbackFilter cannot be null");
 
 		this.observationRegistry = observationRegistry;
 		this.toolCallbackResolver = toolCallbackResolver;
 		this.toolExecutionExceptionProcessor = toolExecutionExceptionProcessor;
+		this.toolCallbackFilter = toolCallbackFilter;
 	}
 
 	@Override
@@ -114,7 +120,10 @@ public final class DefaultToolCallingManager implements ToolCallingManager {
 			toolCallbacks.add(toolCallback);
 		}
 
-		return toolCallbacks.stream().map(ToolCallback::getToolDefinition).toList();
+		return toolCallbacks.stream()
+			.filter(this.toolCallbackFilter::filter)
+			.map(ToolCallback::getToolDefinition)
+			.toList();
 	}
 
 	@Override
@@ -257,6 +266,10 @@ public final class DefaultToolCallingManager implements ToolCallingManager {
 		this.observationConvention = observationConvention;
 	}
 
+	public void setToolCallbackFilter(ToolCallbackFilter toolCallbackFilter) {
+		this.toolCallbackFilter = toolCallbackFilter;
+	}
+
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -271,6 +284,8 @@ public final class DefaultToolCallingManager implements ToolCallingManager {
 		private ToolCallbackResolver toolCallbackResolver = DEFAULT_TOOL_CALLBACK_RESOLVER;
 
 		private ToolExecutionExceptionProcessor toolExecutionExceptionProcessor = DEFAULT_TOOL_EXECUTION_EXCEPTION_PROCESSOR;
+
+		private ToolCallbackFilter toolCallbackFilter = DEFAULT_TOOL_CALL_FILTER;
 
 		private Builder() {
 		}
@@ -291,9 +306,14 @@ public final class DefaultToolCallingManager implements ToolCallingManager {
 			return this;
 		}
 
+		public DefaultToolCallingManager.Builder toolCallbackFilter(ToolCallbackFilter toolCallbackFilter) {
+			this.toolCallbackFilter = toolCallbackFilter;
+			return this;
+		}
+
 		public DefaultToolCallingManager build() {
 			return new DefaultToolCallingManager(this.observationRegistry, this.toolCallbackResolver,
-					this.toolExecutionExceptionProcessor);
+					this.toolExecutionExceptionProcessor, this.toolCallbackFilter);
 		}
 
 	}

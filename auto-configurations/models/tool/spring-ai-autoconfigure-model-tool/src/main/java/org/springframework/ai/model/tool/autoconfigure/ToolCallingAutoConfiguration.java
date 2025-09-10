@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.model.tool.ToolCallbackFilter;
 import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
@@ -102,7 +103,8 @@ public class ToolCallingAutoConfiguration {
 	ToolCallingManager toolCallingManager(ToolCallbackResolver toolCallbackResolver,
 			ToolExecutionExceptionProcessor toolExecutionExceptionProcessor,
 			ObjectProvider<ObservationRegistry> observationRegistry,
-			ObjectProvider<ToolCallingObservationConvention> observationConvention) {
+			ObjectProvider<ToolCallingObservationConvention> observationConvention,
+			ObjectProvider<ToolCallbackFilter> toolCallbackFilter) {
 		var toolCallingManager = ToolCallingManager.builder()
 			.observationRegistry(observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP))
 			.toolCallbackResolver(toolCallbackResolver)
@@ -110,6 +112,7 @@ public class ToolCallingAutoConfiguration {
 			.build();
 
 		observationConvention.ifAvailable(toolCallingManager::setObservationConvention);
+		toolCallbackFilter.ifAvailable(toolCallingManager::setToolCallbackFilter);
 
 		return toolCallingManager;
 	}
